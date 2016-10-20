@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title></title>
     <script src="popup.js"></script>
+    <script src="ajax.js"></script>
+    <script src="dialog.js"></script>
+    <script src="identity.js"></script>
     <style type="text/css">
         * {
             box-sizing: border-box
@@ -59,17 +62,19 @@
             text-align: right;
             padding: 5px;
             margin-top: 10px;
+            padding-top: 20px;
         }
 
         .submit {
-            background-color: burlywood;
+            background-color: #4898fc;
             color: #fff;
             text-align: center;
-            line-height: 35px;
+            line-height: 28px;
             width: 90px;
             border-radius: 3px;
             display: inline-block;
-            font-size: 21px;
+            font-size: 15px;
+            cursor: pointer;
 
         }
 
@@ -80,11 +85,12 @@
         .pre, .next {
             width: 51px;
             line-height: 300px;
+            cursor: pointer;
         }
 
         .pre > div, .next > div {
-            border-top: solid 1px black;
-            border-right: solid 1px black;
+            border-top: solid 2px gray;
+            border-right: solid 2px gray;
             height: 30px;
             width: 30px;
             -webkit-transform: rotateZ(45deg);
@@ -136,12 +142,36 @@
 
         #_dialog_msgBox{
             transform: translateX(-500px);
-            -webkit-transition: all 1.5s;
+            -webkit-transition: all 1s;
         }
         .slidein {
             transform: translateX(0px) !important;
         }
 
+        .box-shadow-6{
+            box-shadow: -1px 0 1px #ffffff, /*左边阴影*/ 2px 0 2px #d0d0d0, /*右边阴影*/ 0 -1px 1px #ffffff, /*顶部阴影*/ 0 2px 2px #9c9c9c;
+        }
+
+
+        .idx-partion{
+            text-align: center;
+            height: 30px;
+            line-height: 30px;
+            font-size: 16px;
+            text-shadow: 1px 0 1px gray, /*右边阴影*/
+            0 1px 1px gray;
+            color: #ffffff;
+        }
+
+        .login-qrcode{
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            display: none;
+        }
+        .login-qrcode>img{
+            width:80%;
+        }
     </style>
 </head>
 <body>
@@ -160,9 +190,10 @@
             <div></div>
         </div>
     </div>
+    <div id="_idx_partion" class="idx-partion">0/0</div>
 
     <div class="option">
-        <span id="_submit" class="submit">发布</span>
+        <span id="_submit" class="submit box-shadow-6">发 布</span>
     </div>
     <div id="resp"></div>
 </div>
@@ -170,6 +201,9 @@
     <div id="_dialog_msgBox">
         <div id="_dialog_close" class="close">X</div>
         <div class="msg">操作成功!</div>
+    </div>
+    <div id="_dialog_loginBox" class="login-qrcode">
+        <img src="http://htfw.dev.wx.webhante.com/forumpic/fd/qr95/6ba40019-7aa1-41dc-97e3-1df302d3dbf2.png">
     </div>
 </div>
 </body>

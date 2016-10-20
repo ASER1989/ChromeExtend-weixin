@@ -52,8 +52,11 @@ function GetImgs(document_root){
     for(var i=0;i<imgList.length;i++){
         if(imgList[i]==null) continue;
 
-        imgList[i].style.maxWidth="230px";
-        imgList[i].src=imgList[i].src.replace(/\"[^\"]{2}/,function(i,v){
+        var img = new Image();
+        img.style.maxWidth="230px";
+        img.src = imgList[i].src;
+
+        img.src=img.src.replace(/\"[^\"]{2}/,function(i,v){
 
 
             if(i=="src=\"//") return "src=\""+location.protocol+"//";
@@ -64,22 +67,15 @@ function GetImgs(document_root){
 
             return i;
         });
-        imgArray.push(imgList[i].outerHTML);
+
+        imgArray.push(img.outerHTML);
     }
 
     return imgArray;
 }
 
-chrome.runtime.sendMessage({
-    action: "getSource",
-    source: DOMtoString(document)
-});
 
 chrome.runtime.sendMessage({
     action: "getImgs",
     source: GetImgs(document)
-});
-chrome.runtime.sendMessage({
-    action: "getFirstImg",
-    source: GetFirstImg(document)
 });

@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "manifest_version":2,
   "description": "good house helper",
-  "permissions": ["tabs", "<all_urls>","debugger","webRequest","webRequestBlocking"],
+  "permissions": ["tabs", "<all_urls>","debugger","webRequest","webRequestBlocking","storage","bookmarks"],
   "browser_action": {
-    "default_icon": "icon.png" ,
+    "default_icon": "cry.png" ,
     "default_title": "好房子助手",
     "default_popup": "popup.html"
   }
