@@ -29,53 +29,74 @@ function DOMtoString(document_root) {
     return html;
 }
 
-function GetFirstImg(document_root){
+function GetFirstImg(document_root) {
     var html = DOMtoString(document_root);
-    var firstImg =html.match(/<img[^>]+/);
-    var img =firstImg && firstImg.length>0?firstImg[0]+" style='width:230px;'>":"";
-    img=img.replace(/src=\"[^\"]{2}/,function(i,v){
-        if(i=="src=\"//") return "src=\""+location.protocol+"//";
-        if(i=="src='//") return "src=\""+location.protocol+"//";
+    var firstImg = html.match(/<img[^>]+/);
+    var img = firstImg && firstImg.length > 0 ? firstImg[0] + " style='width:230px;'>" : "";
+    img = img.replace(/src=\"[^\"]{2}/, function (i, v) {
+        if (i == "src=\"//") return "src=\"" + location.protocol + "//";
+        if (i == "src='//") return "src=\"" + location.protocol + "//";
 
-        if(i.substring(0,6)=="src=\"/") return "src=\""+location.origin+"//"+i.substr(6);
-        if(i.substring(0,6)=="src='/") return "src=\""+location.origin+"//"+i.substr(6);
+        if (i.substring(0, 6) == "src=\"/") return "src=\"" + location.origin + "//" + i.substr(6);
+        if (i.substring(0, 6) == "src='/") return "src=\"" + location.origin + "//" + i.substr(6);
     });
 
 
     return img;
 }
+function getDom(document_root) {
+    return [DOMtoString(document_root), location.protocol];
+}
 
 
-function GetImgs(document_root){
-    var imgList =document.querySelectorAll("img");
-    var imgArray=[];
-    for(var i=0;i<imgList.length;i++){
-        if(imgList[i]==null) continue;
+function GetImgs(imgList, protocol, callback) {
+
+    //var imgList =document_root.querySelectorAll("img");
+    var imgArray = [], loadCount = 0;
+
+    if(imgList==null||imgList.length<1) callback.call(null,imgArray);
+
+    function load() {
+        imgArray.push(this.outerHTML);
+        loadCount += 1;
+        if (loadCount == imgList.length) {
+            callback.call(null, imgArray);
+        }
+        this.removeEventListener("load", load, false);
+    }
+
+    function error() {
+        loadCount += 1;
+        if (loadCount == imgList.length) {
+            callback.call(null, imgArray);
+        }
+        this.removeEventListener("error", error, false);
+    }
+
+    for (var i = 0; i < imgList.length; i++) {
+        if (imgList[i] == null) continue;
 
         var img = new Image();
-        img.style.maxWidth="230px";
-        img.src = imgList[i].src;
+        img.style.maxWidth = "230px";
 
-        img.src=img.src.replace(/\"[^\"]{2}/,function(i,v){
+        img.addEventListener("load", load, false);
+        img.addEventListener("error", error, false);
+
+        imgList[i].src = imgList[i].src.replace("chrome-extension:", protocol);
+        var imgsrc = imgList[i].src;
 
 
-            if(i=="src=\"//") return "src=\""+location.protocol+"//";
-            if(i=="src='//") return "src=\""+location.protocol+"//";
+        img.src = imgsrc.replace(/.{2}/, function (i, v) {
 
-            if(i.substring(0,3)=="src=\"/") return "src=\""+location.origin+"//"+i.substr(3);
-            if(i.substring(0,3)=="src='/") return "src=\""+location.origin+"//"+i.substr(3);
+            if (i == "//") return protocol + "//";
 
             return i;
         });
-
-        imgArray.push(img.outerHTML);
     }
-
-    return imgArray;
 }
 
 
 chrome.runtime.sendMessage({
     action: "getImgs",
-    source: GetImgs(document)
+    source: getDom(document)
 });

@@ -13,16 +13,25 @@ chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action == "getImgs") {
-        //message.innerText = request.source;
-        window.imgList = request.source;
-        $('#_img').innerHTML = request.source[0];
-        idxpartion.innerHTML = 1 + "/" + imgList.length;
-    }
+        var el = document.createElement("div");
+        el.innerHTML = request.source[0];
 
-    //if(request.action=="dialogReady"){
-    //
-    //    window.dialog= dialogReady();
-    //}
+        var doc = el.querySelectorAll("img");
+
+        GetImgs(doc, request.source[1], function (imglist) {
+            window.imgList = imglist;
+            $('#_img').innerHTML = imglist[0];
+            idxpartion.innerHTML = 1 + "/" + imgList.length;
+
+            eventBinds();
+            window.dialog = getDialogConfig();
+            window.userInfo = identityInit(window.dialog);
+            window.reqTool = userInfo.reqTool;
+            window.host = userInfo.host;
+
+        });
+
+    }
 });
 
 
@@ -31,23 +40,19 @@ function onWindowLoad() {
     window.imgList = null;
     window.imgIdx = 0;
     window.idxpartion = $("#_idx_partion");
+    var imgprview = $('#_img');
+
+
     chrome.tabs.executeScript(null, {
-        file: "dialog.js"
+        file: "getPagesSource.js"
     }, function () {
-        chrome.tabs.executeScript(null, {
-            file: "getPagesSource.js"
-        }, function () {
-            // If you try and inject into an extensions page or the webstore/NTP you'll get an error
-            if (chrome.runtime.lastError) {
-                imgprview.innerText = 'There was an error injecting script : \n' + chrome.runtime.lastError.message;
-            }
-        });
+        // If you try and inject into an extensions page or the webstore/NTP you'll get an error
+        if (chrome.runtime.lastError) {
+            imgprview.innerText = 'There was an error injecting script : \n' + chrome.runtime.lastError.message;
+        }
     });
 
-    eventBinds();
-    window.dialog = getDialogConfig();
-    window.userInfo = identityInit(window.dialog);
-    window.reqTool = userInfo.reqTool;
+
 }
 
 function eventBinds() {
@@ -68,7 +73,16 @@ function eventBinds() {
         idxpartion.innerHTML = imgIdx + 1 + "/" + imgList.length;
     });
 
-    chrome.tabs.getSelected(null,function(tab) {
+    $("#_view_list").addEventListener("click", function () {
+        $("#_warp_box").classList.add("goto-list");
+        getList();
+    });
+
+    $("#_back_index").addEventListener("click", function () {
+        $("#_warp_box").classList.remove("goto-list");
+    });
+
+    chrome.tabs.getSelected(null, function (tab) {
         var tablink = tab.url;
         $("#_submit").addEventListener("click", function () {
 
@@ -77,13 +91,24 @@ function eventBinds() {
             //    window.dialog.showMsg("系统提示");
             //});
 
+            var imgsrc = imgList[imgIdx].match(/src=.[^("|')]+/)[0].substr(5);
             var reqData = {
                 title: $("#_title").value,
-                imgurl: imgList[imgIdx].match(/src=.[^("|')]+/)[0].substr(5),
-                docurl: tablink
+                imgurl: imgsrc.indexOf("http") >= 0 ? imgsrc : null,
+                docurl: tablink,
+                content: imgsrc.indexOf("http") >= 0 ? null : imgsrc
             };
             reqTool.post("/hfz/HfzCommAction/saveDoc", {obj: reqData}, function (data) {
-                window.dialog.showMsg("操作成功!");
+                if (data) {
+                    data = JSON.parse(data);
+                    if (data.obj == 1) {
+                        window.dialog.showMsg("操作成功!");
+                    } else {
+                        var errmsg = data.errmsg == null || data.errmsg == "" ? "" : "错误信息为:" + data.errmsg;
+                        window.dialog.showMsg("操作失败!" + errmsg);
+                    }
+                }
+
             });
 
         });
@@ -92,6 +117,39 @@ function eventBinds() {
 
     $("#_dialog_close").addEventListener("click", function () {
         dialog.hideMsg();
+    });
+}
+
+function getList() {
+    var box = $("#_data_list");
+    reqTool.get("/hfz/HfzCommAction/listDoc", {obj: null}, function (data) {
+        if (data) {
+            data = JSON.parse(data);
+            if (data.obj && data.obj.list && data.obj.list.length > 0) {
+                box.innerHTML = "";
+                for (var i = 0; i < data.obj.list.length; i++) {
+                    var item = data.obj.list[i];
+                    var el = document.createElement("div"), title = document.createElement("a"), img = document.createElement('img');
+
+                    title.href = item.docurl;
+                    title.innerHTML = item.title;
+                    item.imgurl = item.imgurl || "" , img.src = item.imgurl.substring(0, 1) == "/" ? host + item.imgurl : item.imgurl;
+
+                    el.classList.add("list-item");
+                    img.classList.add("list-img");
+                    title.target = "view_window";
+
+                    el.appendChild(img);
+                    el.appendChild(title);
+                    box.appendChild(el);
+                }
+                //box.innerHTML = "<p style='font-size: 16px;color:gray;'>暂无数据!</p>";
+            } else {
+                box.innerHTML = "<p style='width:100%;text-align: center; font-size: 16px; color:gray;'>暂无数据</p>";
+            }
+
+        }
+
     });
 }
 

@@ -22,7 +22,20 @@ var Ajax = {
             }
         }
         data = Ajax.encodeFormData(data);
-        //xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(data);
+    },
+    postFile:function(url,file, callback){
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", url, true);
+        var form = new FormData();
+        form.append("file", fileObj);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                callback.call(null, xhr.responseText);
+            }
+        }
+        data = Ajax.encodeFormData(data);
         xhr.setRequestHeader('Content-Type', 'multipart/form-data');
         xhr.send(data);
     },

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title></title>
     <script src="popup.js"></script>
+    <script src="getPagesSource.js"></script>
     <script src="ajax.js"></script>
     <script src="dialog.js"></script>
     <script src="identity.js"></script>
@@ -14,7 +15,7 @@
 
         .input {
             width: 600px;
-            height: 52px;
+            height: 100px;
             font-size: 26px;
             border: solid 1px gray;
             border-radius: 3px;
@@ -32,16 +33,31 @@
             -webkit-transform-origin: left;
         }
 
+        .warp {
+            height: 510px;
+            width: 410px;
+            overflow: hidden;
+
+        }
+
+        #_warp_box {
+            display: -webkit-box;
+            transition: all .5s;
+
+        }
+
+        .goto-list {
+            transform: translateX(-410px);
+            -webkit-transform: translateX(-410px);
+        }
+
         .box {
-            height: 500px;
+            height: 510px;
             width: 410px;
             text-align: center;
             padding: 10px;
             overflow: auto;
-            /*border:solid 1px gray;*/
-            /*border-radius: 3px;*/
-            /*box-shadow: 2px 1px 1px #888888;*/
-
+            padding-top: 0;
         }
 
         .imgperivew {
@@ -75,7 +91,6 @@
             display: inline-block;
             font-size: 15px;
             cursor: pointer;
-
         }
 
         .preBox {
@@ -111,7 +126,6 @@
             height: 550px;
             width: 460px;
             display: none;
-
         }
 
         .close {
@@ -125,6 +139,7 @@
             color: #9a9a9a;
             text-align: center;
             font-size: 20px;
+            cursor: pointer;
         }
 
         .msg {
@@ -137,66 +152,115 @@
             font-size: 18px;
             text-align: center;
             line-height: 160px;
-
         }
 
-        #_dialog_msgBox{
+        #_dialog_msgBox {
             transform: translateX(-500px);
-            -webkit-transition: all 1s;
+            -webkit-transition: all 0.7s;
         }
+
         .slidein {
             transform: translateX(0px) !important;
         }
 
-        .box-shadow-6{
+        .box-shadow-6 {
             box-shadow: -1px 0 1px #ffffff, /*左边阴影*/ 2px 0 2px #d0d0d0, /*右边阴影*/ 0 -1px 1px #ffffff, /*顶部阴影*/ 0 2px 2px #9c9c9c;
         }
 
-
-        .idx-partion{
+        .idx-partion {
             text-align: center;
             height: 30px;
             line-height: 30px;
             font-size: 16px;
-            text-shadow: 1px 0 1px gray, /*右边阴影*/
-            0 1px 1px gray;
+            text-shadow: 1px 0 1px gray, /*右边阴影*/ 0 1px 1px gray;
             color: #ffffff;
         }
 
-        .login-qrcode{
+        .login-qrcode {
             position: absolute;
             top: 10%;
             left: 10%;
             display: none;
         }
-        .login-qrcode>img{
-            width:80%;
+
+        .login-qrcode > img {
+            width: 80%;
+        }
+
+        .list-box {
+            border: solid 1px gray;
+            border-radius: 3px;
+            text-align: left !important;
+        }
+        #_data_list{
+            padding-bottom: 40px;
+        }
+        .list-item {
+            /*display: -webkit-box;*/
+            border-bottom: solid 1px gray;
+            height: 50px;
+            line-height: 50px;
+            overflow: hidden;
+        }
+
+        .list-img {
+            width: 30px;
+
+        }
+
+        .view_list {
+            float: left;
+            line-height: 1.5;
+            cursor: pointer;
+            border: solid 1px #d6d4d4;
+            padding: 3px 8px;
+            border-radius: 3px;
+            background-color: #ffffff;
+        }
+
+        .view_list > img {
+            width: 15px;
+            margin-bottom: -3px;
+        }
+        .back-box{
+            position: absolute; bottom: 22px; width:410px;
         }
     </style>
 </head>
 <body>
-<div class="box">
-    <div class="zoom-05">
-        <div class="lable">标题:</div>
-        <div><input id="_title" type="text" class="input"/></div>
-    </div>
+<section class="warp">
+    <div id="_warp_box">
+        <div class="box">
+            <div class="zoom-05">
+                <div class="lable">标题:</div>
+                <div><textarea id="_title" type="text" rows="3" class="input"></textarea></div>
+            </div>
 
-    <div class="preBox">
-        <div id="_pre" class="pre">
-            <div></div>
-        </div>
-        <div id="_img" class="imgperivew"></div>
-        <div id="_next" class="next">
-            <div></div>
-        </div>
-    </div>
-    <div id="_idx_partion" class="idx-partion">0/0</div>
+            <div class="preBox">
+                <div id="_pre" class="pre">
+                    <div></div>
+                </div>
+                <div id="_img" class="imgperivew"></div>
+                <div id="_next" class="next">
+                    <div></div>
+                </div>
+            </div>
+            <div id="_idx_partion" class="idx-partion">0/0</div>
 
-    <div class="option">
-        <span id="_submit" class="submit box-shadow-6">发 布</span>
+            <div class="option">
+                <span id="_view_list" class="view_list"><img src="see.png"> 添加记录</span>
+                <span id="_submit" class="submit box-shadow-6">发 布</span>
+            </div>
+            <div id="resp"></div>
+        </div>
+        <div class="box list-box">
+            <div id="_data_list"></div>
+            <div class="back-box">
+                <span id="_back_index" class="view_list"><img src="back.png"> 返回</span>
+            </div>
+        </div>
     </div>
-    <div id="resp"></div>
-</div>
+</section>
 <div id="_dialog" class="dialog">
     <div id="_dialog_msgBox">
         <div id="_dialog_close" class="close">X</div>

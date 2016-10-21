@@ -62,7 +62,7 @@ function identityInit(dialog) {
         }
     }();
 
-    return {userInfo: userInfo, reqTool: req};
+    return {userInfo: userInfo, reqTool: req,host:host};
 
 }
 
@@ -88,6 +88,7 @@ function reqTool(userInfo, host) {
         var postData = {j: JSON.stringify(make(action, param))};
         Ajax.post(host, postData, callback);
     }
+
 
     function getGuid() {
 
