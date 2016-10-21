@@ -14,7 +14,7 @@ chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action == "getImgs") {
         var el = document.createElement("div");
-        el.innerHTML = request.source[0];
+        el.innerHTML = request.source[0]||"";
 
         var doc = el.querySelectorAll("img");
 
