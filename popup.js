@@ -3,7 +3,7 @@
  */
 
 function $(a) {
-    return document.querySelector(a);
+    return a.indexOf(".")==0?document.querySelectorAll(a): document.querySelector(a);
 }
 chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
     //tabs[0].url;     //url
@@ -28,6 +28,25 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             window.userInfo = identityInit(window.dialog);
             window.reqTool = userInfo.reqTool;
             window.host = userInfo.host;
+            userInfo.userInfo.onCityLoad(function(cityList,custcity){
+
+                var html="";
+                cityList.forEach(function(item){
+                    //var i in v;
+                    for(var i in item){
+                        var opt = i==custcity?"selected='true'":"";
+
+                        html+="<option value='"+item[i]+"' "+opt+">"+i+"</option>";
+                      break;
+                    }
+
+                });
+
+                $(".server-list").forEach(function(v){
+                    v.innerHTML=html;
+                });
+
+            });
 
         });
 
@@ -117,6 +136,17 @@ function eventBinds() {
 
     $("#_dialog_close").addEventListener("click", function () {
         dialog.hideMsg();
+    });
+
+    $(".server-list").forEach(function(v){
+        v.addEventListener("change", function (a,b,c,d,e) {
+            var selitem = this.selectedIndex;
+            var item = this.options[selitem];
+            userInfo.userInfo.changeCity(item.text,item.value);
+            $(".server-list").forEach(function(sel){
+                sel.options[selitem].selected=true;
+            });
+        });
     });
 }
 

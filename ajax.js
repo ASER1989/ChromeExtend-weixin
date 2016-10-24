@@ -3,14 +3,22 @@
  * Created by aser on 16/10/20.
  */
 var Ajax = {
-    get: function (url, callback) {
+    get: function (url, callback,error) {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", url, true);
+
         xhr.onreadystatechange = function () {
             if (xhr.readyState == 4) {
-                callback.call(null, xhr.responseText);
+
+
+                if (xhr.status === 200) {
+                    // Success
+                    callback.call(null, xhr.responseText);
+                } else {
+                   if(typeof error=="function") error.call(null,xhr.responseText);
+                }
             }
         }
+        xhr.open("GET", url, true);
         xhr.send();
     },
     post: function (url, data, callback) {

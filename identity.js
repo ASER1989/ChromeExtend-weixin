@@ -5,31 +5,90 @@
 
 
 function identityInit(dialog) {
+    var custCity = localStorage.getItem("_good_house_custcity");
+
     var keys = {
-        openid: "_user_openid_x3",
-        passport: "_user_passport_x3"
+        openid: function () {
+            return "_user_openid_x_" + custCity;
+        },
+        passport: function () {
+            return "_user_passport_x_" + custCity;
+        },
+        host: "_good_house_extension_host",
+        city: "_good_house_custcity"
     };
+
     var host = "http://htfw.dev.wx.webhante.com";
     var reqHost = host + "/qc-webapp/qcapi.do";
-
+    var cityList = [];
+    var LoginTimer = null;
 
     var userInfo = {
         getOpenid: function () {
-            return localStorage.getItem(keys.openid);
+            return localStorage.getItem(keys.openid());
         },
         setOpenid: function (val) {
-            localStorage.setItem(keys.openid, val);
+            localStorage.setItem(keys.openid(), val);
         },
         getPassport: function () {
-            return localStorage.getItem(keys.passport);
+            return localStorage.getItem(keys.passport());
         },
         setPassport: function (val) {
-            localStorage.setItem(keys.passport, val);
+            localStorage.setItem(keys.passport(), val);
+        },
+        onCityLoad: function (fn) {
+            if (cityList.length <= 0) {
+                return getAppCity(fn);
+            }
+            if (typeof fn == "function") {
+                fn.call(null, cityList);
+            }
+        },
+        changeCity: changeCity,
+        getCity: function () {
+            return localStorage.getItem(keys.city);
+        }
+    }
+    //请求工具
+    var req = reqTools(userInfo, reqHost);
+    var guid = req.getGuid();
+
+    function getAppCity(fn) {
+        req.get("/global/App/queryAppCity", function (data) {
+            data = JSON.parse(data);
+            var list = data.obj;
+            list.forEach(function (v) {
+
+                var item = {};
+                item[v.city] = v.domain;
+                cityList.push(item);
+            });
+            if (typeof fn == "function") {
+                fn.call(null, cityList, localStorage.getItem(keys.city));
+            }
+        });
+
+    }
+
+    function changeCity(city, host) {
+        if (city && host) {
+            localStorage.setItem(keys.host, host);
+            custCity = city;
+            localStorage.setItem(keys.city, city);
+
+            //debugger;
+            reqHost = host + "/qc-webapp/qcapi.do";
+            req = reqTools(userInfo, reqHost);
+
+            if (!userInfo.getOpenid()) {
+
+                ready();
+            }else{
+                dialog.hideLogin();
+            }
         }
     }
 
-    var req = reqTool(userInfo, reqHost);
-    var guid = req.getGuid();
     /* *
      * 登陆监听
      * */
@@ -41,33 +100,46 @@ function identityInit(dialog) {
                   userInfo.setOpenid(data.obj.openid);
                   userInfo.setPassport(data.obj.passport);
                   dialog.hideLogin();
+                  req = reqTools(userInfo, reqHost);
               }
 
           });
 
         if (!userInfo.getOpenid())
-            setTimeout(LoginListener, 1000);
+            LoginTimer = setTimeout(LoginListener, 1000);
     }
 
-    void function ready() {
-
+    function ready() {
+        //getAppCity();
         var openid = userInfo.getOpenid();
         if (!openid) {
+            dialog.setQrImg("loadqrcode.jpg");
+            
             req.get("/global/Qrcode/getQRCodeByKey", {obj: host + "/wxcweb2/loginPC.html?uuid=" + guid}, function (data) {
                 var resObj = JSON.parse(data);
                 dialog.showLogin(resObj.obj);
+                clearTimeout(LoginTimer);
                 LoginListener();
+            },function(){
+                dialog.hideLogin();
+                dialog.showMsg("系统错误,暂时无法登陆!",function(){
+                    dialog.showLogin("qrcodeError.jpg");
+                });
             });
 
         }
+    }
+
+    void function doReady() {
+        ready();
     }();
 
-    return {userInfo: userInfo, reqTool: req,host:host};
+    return {userInfo: userInfo, reqTool: req, host: localStorage.getItem(keys.host)};
 
 }
 
 
-function reqTool(userInfo, host) {
+function reqTools(userInfo, host) {
 
     function make(action, param) {
         return {
@@ -79,9 +151,11 @@ function reqTool(userInfo, host) {
         };
     }
 
-    function get(action, param, callback) {
+    function get(action, param, callback,error) {
+        callback = callback == null && typeof param == "function" ? param : callback;
+
         var j = make(action, param);
-        Ajax.get(host + "?j=" + JSON.stringify(j), callback);
+        Ajax.get(host + "?j=" + JSON.stringify(j), callback,error);
     }
 
     function post(action, param, callback) {

@@ -192,9 +192,11 @@
             border-radius: 3px;
             text-align: left !important;
         }
-        #_data_list{
+
+        #_data_list {
             padding-bottom: 40px;
         }
+
         .list-item {
             /*display: -webkit-box;*/
             border-bottom: solid 1px gray;
@@ -222,8 +224,30 @@
             width: 15px;
             margin-bottom: -3px;
         }
-        .back-box{
-            position: absolute; bottom: 22px; width:410px;
+
+        .back-box {
+            position: absolute;
+            bottom: 22px;
+            width: 410px;
+        }
+        .server-sel{
+            text-align: left;
+        }
+        .server-dep{
+            color: #000000;
+            font-size: 16px
+        }
+        .server-sel>select{
+            height: 30px;
+            width: 100px;
+            /*border: none;*/
+        }
+        .server-login{
+            color: #fff;
+            font-size: 13px
+        }
+        .server-list{
+            width: 130px;
         }
     </style>
 </head>
@@ -231,6 +255,11 @@
 <section class="warp">
     <div id="_warp_box">
         <div class="box">
+            <div class="server-sel">
+                <label class="server-dep">发布到:</label>
+                <select class="server-list">
+                </select>
+            </div>
             <div class="zoom-05">
                 <div class="lable">标题:</div>
                 <div><textarea id="_title" type="text" rows="3" class="input"></textarea></div>
@@ -267,6 +296,12 @@
         <div class="msg">操作成功!</div>
     </div>
     <div id="_dialog_loginBox" class="login-qrcode">
+        <div>
+            <label class="server-login">登陆到:</label>
+            <select class="server-list">
+            </select>
+        </div>
+
         <img src="http://htfw.dev.wx.webhante.com/forumpic/fd/qr95/6ba40019-7aa1-41dc-97e3-1df302d3dbf2.png">
     </div>
 </div>
