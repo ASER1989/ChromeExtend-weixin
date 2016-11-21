@@ -4,8 +4,9 @@
  */
 
 
-function identityInit(dialog) {
+function identityInit(dialog,loginCallback) {
     var custCity = localStorage.getItem("_good_house_custcity");
+    loginCallback = loginCallback ||function(){};
 
     var keys = {
         openid: function () {
@@ -50,7 +51,7 @@ function identityInit(dialog) {
         }
     }
     //请求工具
-    var req = reqTools(userInfo, reqHost);
+    var req = new reqTools(userInfo, reqHost);
     var guid = req.getGuid();
 
     function getAppCity(fn) {
@@ -78,14 +79,17 @@ function identityInit(dialog) {
 
             //debugger;
             reqHost = host + "/qc-webapp/qcapi.do";
-            req = reqTools(userInfo, reqHost);
+
+            req = new reqTools(userInfo, reqHost);
 
             if (!userInfo.getOpenid()) {
 
                 ready();
             }else{
                 dialog.hideLogin();
+
             }
+            return req;
         }
     }
 
@@ -100,7 +104,7 @@ function identityInit(dialog) {
                   userInfo.setOpenid(data.obj.openid);
                   userInfo.setPassport(data.obj.passport);
                   dialog.hideLogin();
-                  req = reqTools(userInfo, reqHost);
+                  //req = reqTools(userInfo, reqHost);
               }
 
           });
@@ -114,7 +118,7 @@ function identityInit(dialog) {
         var openid = userInfo.getOpenid();
         if (!openid) {
             dialog.setQrImg("loadqrcode.jpg");
-            
+
             req.get("/global/Qrcode/getQRCodeByKey", {obj: host + "/wxcweb2/loginPC.html?uuid=" + guid}, function (data) {
                 var resObj = JSON.parse(data);
                 dialog.showLogin(resObj.obj);
@@ -183,7 +187,8 @@ function reqTools(userInfo, host) {
     return {
         get: get,
         post: post,
-        getGuid: getGuid
+        getGuid: getGuid,
+        host:host
 
     }
 }

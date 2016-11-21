@@ -3,7 +3,7 @@
  */
 
 function $(a) {
-    return a.indexOf(".")==0?document.querySelectorAll(a): document.querySelector(a);
+    return a.indexOf(".") == 0 ? document.querySelectorAll(a) : document.querySelector(a);
 }
 chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
     //tabs[0].url;     //url
@@ -14,7 +14,7 @@ chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action == "getImgs") {
         var el = document.createElement("div");
-        el.innerHTML = request.source[0]||"";
+        el.innerHTML = request.source[0] || "";
 
         var doc = el.querySelectorAll("img");
 
@@ -25,25 +25,38 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
             eventBinds();
             window.dialog = getDialogConfig();
-            window.userInfo = identityInit(window.dialog);
+            window.userInfo = identityInit(window.dialog, function (reqtool) {
+                window.reqTool = reqtool;
+            });
             window.reqTool = userInfo.reqTool;
             window.host = userInfo.host;
-            userInfo.userInfo.onCityLoad(function(cityList,custcity){
+            userInfo.userInfo.onCityLoad(function (cityList, custcity) {
 
-                var html="";
-                cityList.forEach(function(item){
+                var html = "";
+                var custHost = null;
+                var fi = 0, firstcity = null, firsthost = null;
+
+                cityList.forEach(function (item) {
                     //var i in v;
-                    for(var i in item){
-                        var opt = i==custcity?"selected='true'":"";
+                    for (var i in item) {
+                        var opt = i == custcity ? "selected='true'" : "";
+                        custHost = i == custcity ? item[i] : custHost;
 
-                        html+="<option value='"+item[i]+"' "+opt+">"+i+"</option>";
-                      break;
+                        html += "<option value='" + item[i] + "' " + opt + ">" + i + "</option>";
+
+                        firstcity = fi == 0 ? i : firstcity;
+                        firsthost = fi == 0 ? i : item[i];
+                        break;
                     }
-
+                    fi++;
                 });
+                custcity = custcity || firstcity;
+                custHost = custHost || firsthost;
+                //debugger;
+                window.reqTool = userInfo.userInfo.changeCity(custcity, custHost);
 
-                $(".server-list").forEach(function(v){
-                    v.innerHTML=html;
+                $(".server-list").forEach(function (v) {
+                    v.innerHTML = html;
                 });
 
             });
@@ -117,6 +130,7 @@ function eventBinds() {
                 docurl: tablink,
                 content: imgsrc.indexOf("http") >= 0 ? null : imgsrc
             };
+            window.reqTool = window.reqTool || userInfo.reqTool;
             reqTool.post("/hfz/HfzCommAction/saveDoc", {obj: reqData}, function (data) {
                 if (data) {
                     data = JSON.parse(data);
@@ -138,13 +152,13 @@ function eventBinds() {
         dialog.hideMsg();
     });
 
-    $(".server-list").forEach(function(v){
-        v.addEventListener("change", function (a,b,c,d,e) {
+    $(".server-list").forEach(function (v) {
+        v.addEventListener("change", function (a, b, c, d, e) {
             var selitem = this.selectedIndex;
             var item = this.options[selitem];
-            userInfo.userInfo.changeCity(item.text,item.value);
-            $(".server-list").forEach(function(sel){
-                sel.options[selitem].selected=true;
+            window.reqTool= userInfo.userInfo.changeCity(item.text, item.value);
+            $(".server-list").forEach(function (sel) {
+                sel.options[selitem].selected = true;
             });
         });
     });
@@ -152,26 +166,50 @@ function eventBinds() {
 
 function getList() {
     var box = $("#_data_list");
+    box.innerHTML = "";
+
+    window.reqTool = window.reqTool || userInfo.reqTool;
     reqTool.get("/hfz/HfzCommAction/listDoc", {obj: null}, function (data) {
         if (data) {
             data = JSON.parse(data);
             if (data.obj && data.obj.list && data.obj.list.length > 0) {
-                box.innerHTML = "";
+
                 for (var i = 0; i < data.obj.list.length; i++) {
                     var item = data.obj.list[i];
-                    var el = document.createElement("div"), title = document.createElement("a"), img = document.createElement('img');
+                    var el = document.createElement("div"),
+                      title = document.createElement("a"),
+                      imgbox = document.createElement("div"),
+                      img = document.createElement('img'),
+                      del=document.createElement('img');
 
                     title.href = item.docurl;
                     title.innerHTML = item.title;
                     item.imgurl = item.imgurl || "" , img.src = item.imgurl.substring(0, 1) == "/" ? host + item.imgurl : item.imgurl;
 
                     el.classList.add("list-item");
-                    img.classList.add("list-img");
-                    title.target = "view_window";
+                    img.style.maxWidth="30px";
+                    imgbox.classList.add("list-img");
+                    imgbox.appendChild(img);
 
-                    el.appendChild(img);
+                    title.target = "view_window";
+                    title.classList.add("list-title");
+
+                    del.classList.add("list-del");
+                    del.src="./delete.png";
+                    del.setAttribute("data-itemid",item.id);
+
+                    el.appendChild(imgbox);
                     el.appendChild(title);
+                    el.appendChild(del);
                     box.appendChild(el);
+
+                    del.addEventListener("click",function(){
+                        var delid = this.getAttribute("data-itemid");
+                        reqTool.get("/hfz/HfzCommAction/delDoc",{obj:{ids:delid}},function(data){
+                           getList();
+                        });
+
+                    });
                 }
                 //box.innerHTML = "<p style='font-size: 16px;color:gray;'>暂无数据!</p>";
             } else {
