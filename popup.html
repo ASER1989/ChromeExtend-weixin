@@ -254,17 +254,33 @@
             color: #000000;
             font-size: 16px
         }
-        .server-sel>select{
-            height: 30px;
-            width: 100px;
-            /*border: none;*/
-        }
+
         .server-login{
             color: #fff;
             font-size: 13px
         }
         .server-list{
-            width: 130px;
+            height: 30px;
+            width: 153px;
+        }
+
+        .input-search{
+            position: absolute;
+            z-index: 99;
+            width: 78px;
+            height: 26px;
+            background: transparent;
+            border: none;
+            padding-left: 9px;
+            top: 10px;
+            left: 76px;
+        }
+        .dia-input-search{
+            top: 2px !important;
+            left: 49px !important;
+        }
+        .input-show{
+            background:#f8f8f8 !important;
         }
 
     </style>
@@ -277,6 +293,7 @@
                 <label class="server-dep">发布到:</label>
                 <select class="server-list">
                 </select>
+                <input type="text" class="input-search"/>
             </div>
             <div class="zoom-05">
                 <div class="lable">标题:</div>
@@ -316,6 +333,7 @@
     <div id="_dialog_loginBox" class="login-qrcode">
         <div>
             <label class="server-login">登陆到:</label>
+            <input type="text" class="input-search dia-input-search"/>
             <select class="server-list">
             </select>
         </div>

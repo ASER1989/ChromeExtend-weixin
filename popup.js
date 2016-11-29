@@ -10,7 +10,6 @@ chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
     document.getElementById("_title").value = tabs[0].title;   //title
 });
 
-
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action == "getImgs") {
         var el = document.createElement("div");
@@ -32,20 +31,31 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             window.host = userInfo.host;
             userInfo.userInfo.onCityLoad(function (cityList, custcity) {
 
-                var html = "";
+                //var html = "";
                 var custHost = null;
                 var fi = 0, firstcity = null, firsthost = null;
-
+                //排序~~~
+                var resArray = [];
+                var orderby =["武汉","深圳","广州","惠州","东莞","珠海","中山","佛山"];
+                var kl=orderby.length;
                 cityList.forEach(function (item) {
                     //var i in v;
                     for (var i in item) {
                         var opt = i == custcity ? "selected='true'" : "";
                         custHost = i == custcity ? item[i] : custHost;
 
-                        html += "<option value='" + item[i] + "' " + opt + ">" + i + "</option>";
+                        var  html = "<option value='" + item[i] + "' " + opt + ">" + i + "</option>";
 
                         firstcity = fi == 0 ? i : firstcity;
                         firsthost = fi == 0 ? i : item[i];
+                        /***指定排序****/
+                        var sort= orderby.indexOf(i);
+                        if(sort>=0){
+                            resArray[sort]=html;
+                        }else{
+                            resArray[kl]=html;
+                            kl++;
+                        }
                         break;
                     }
                     fi++;
@@ -56,7 +66,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 window.reqTool = userInfo.userInfo.changeCity(custcity, custHost);
 
                 $(".server-list").forEach(function (v) {
-                    v.innerHTML = html;
+                    v.innerHTML = resArray.join("");
                 });
 
             });
@@ -114,7 +124,38 @@ function eventBinds() {
         $("#_warp_box").classList.remove("goto-list");
     });
 
+    //搜索框事件
+    $(".input-search").forEach(function (item) {
+        item.addEventListener("keyup", function (e) {
+            if (e.keyCode == 13) {
+                var that = this;
+                var val = that.value;
+                var sel = this.parentNode.querySelector(".server-list");
+                for (var i = 0; i < sel.options.length; i++) {
+                    var oitem = sel.options[i];
+                    if (oitem.text.indexOf(val) == 0) {
+                        oitem.selected = "selected";
+                        that.value == "";
+                        that.blur();
+                        serverChange.call(sel);
+                    }
+                }
+            }
+
+        });
+        item.addEventListener("focus", function () {
+            this.classList.add("input-show");
+        });
+        item.addEventListener("blur", function () {
+            this.classList.remove("input-show");
+            this.value="";
+        });
+
+
+    });
+
     chrome.tabs.getSelected(null, function (tab) {
+
         var tablink = tab.url;
         $("#_submit").addEventListener("click", function () {
 
@@ -153,15 +194,18 @@ function eventBinds() {
     });
 
     $(".server-list").forEach(function (v) {
-        v.addEventListener("change", function (a, b, c, d, e) {
-            var selitem = this.selectedIndex;
-            var item = this.options[selitem];
-            window.reqTool= userInfo.userInfo.changeCity(item.text, item.value);
-            $(".server-list").forEach(function (sel) {
-                sel.options[selitem].selected = true;
-            });
-        });
+        v.addEventListener("change", serverChange);
     });
+    //切换服务器
+    function serverChange(a, b, c, d, e) {
+
+        var selitem = this.selectedIndex;
+        var item = this.options[selitem];
+        window.reqTool = userInfo.userInfo.changeCity(item.text, item.value);
+        $(".server-list").forEach(function (sel) {
+            sel.options[selitem].selected = true;
+        });
+    }
 }
 
 function getList() {
@@ -180,14 +224,14 @@ function getList() {
                       title = document.createElement("a"),
                       imgbox = document.createElement("div"),
                       img = document.createElement('img'),
-                      del=document.createElement('img');
+                      del = document.createElement('img');
 
                     title.href = item.docurl;
                     title.innerHTML = item.title;
                     item.imgurl = item.imgurl || "" , img.src = item.imgurl.substring(0, 1) == "/" ? host + item.imgurl : item.imgurl;
 
                     el.classList.add("list-item");
-                    img.style.maxWidth="30px";
+                    img.style.maxWidth = "30px";
                     imgbox.classList.add("list-img");
                     imgbox.appendChild(img);
 
@@ -195,18 +239,18 @@ function getList() {
                     title.classList.add("list-title");
 
                     del.classList.add("list-del");
-                    del.src="./delete.png";
-                    del.setAttribute("data-itemid",item.id);
+                    del.src = "./delete.png";
+                    del.setAttribute("data-itemid", item.id);
 
                     el.appendChild(imgbox);
                     el.appendChild(title);
                     el.appendChild(del);
                     box.appendChild(el);
 
-                    del.addEventListener("click",function(){
+                    del.addEventListener("click", function () {
                         var delid = this.getAttribute("data-itemid");
-                        reqTool.get("/hfz/HfzCommAction/delDoc",{obj:{ids:delid}},function(data){
-                           getList();
+                        reqTool.get("/hfz/HfzCommAction/delDoc", {obj: {ids: delid}}, function (data) {
+                            getList();
                         });
 
                     });

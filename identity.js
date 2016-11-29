@@ -10,16 +10,17 @@ function identityInit(dialog,loginCallback) {
 
     var keys = {
         openid: function () {
-            return "_user_openid_x_" + custCity;
+            return "_user_openid_x0_" + custCity;
         },
         passport: function () {
-            return "_user_passport_x_" + custCity;
+            return "_user_passport_x0_" + custCity;
         },
         host: "_good_house_extension_host",
         city: "_good_house_custcity"
     };
 
-    var host = "http://htfw.dev.wx.webhante.com";
+    //var host = "http://htfw.dev.wx.webhante.com";
+    var host = "http://whhfz.cq.ourhfz.com";
     var reqHost = host + "/qc-webapp/qcapi.do";
     var cityList = [];
     var LoginTimer = null;
@@ -97,14 +98,14 @@ function identityInit(dialog,loginCallback) {
      * 登陆监听
      * */
     function LoginListener() {
-        req.get('/activity/movie/MovieAction/getQRCodeUser', {obj: {uuid: guid}},
+        //req.get('/activity/movie/MovieAction/getQRCodeUser', {obj: {uuid: guid}},
+        req.get('/hfz/HfzCommAction/getLoginUser', {obj: {uuid: guid}},
           function (data) {
               data = JSON.parse(data);
               if (data.obj != true) {
-                  userInfo.setOpenid(data.obj.openid);
-                  userInfo.setPassport(data.obj.passport);
+                  userInfo.setOpenid(data.obj.user.openid);
+                  userInfo.setPassport(data.obj.user.passport);
                   dialog.hideLogin();
-                  //req = reqTools(userInfo, reqHost);
               }
 
           });
@@ -117,9 +118,9 @@ function identityInit(dialog,loginCallback) {
         //getAppCity();
         var openid = userInfo.getOpenid();
         if (!openid) {
-            dialog.setQrImg("loadqrcode.jpg");
+            dialog.setQrImg();
 
-            req.get("/global/Qrcode/getQRCodeByKey", {obj: host + "/wxcweb2/loginPC.html?uuid=" + guid}, function (data) {
+            req.get("/global/Qrcode/getQRCodeByKey", {obj: req.host.replace("/qc-webapp/qcapi.do","") + "/market/login-pc.html?uuid=" + guid}, function (data) {
                 var resObj = JSON.parse(data);
                 dialog.showLogin(resObj.obj);
                 clearTimeout(LoginTimer);
@@ -189,6 +190,5 @@ function reqTools(userInfo, host) {
         post: post,
         getGuid: getGuid,
         host:host
-
     }
 }

@@ -32,8 +32,10 @@ function getDialogConfig() {
                 that.onMsgHide=null;
             }
         },
-        setQrImg:function(img){
+        setQrImg:function(){
             that.loginBox.querySelector("img").src="loadqrcode.jpg";
+            that.dialogBox.style.display="block";
+            that.loginBox.style.display="initial";
         },
         showLogin: function (qrcode) {
             that.loginBox.querySelector("img").src="loadqrcode.jpg";
